@@ -3,7 +3,6 @@ import type {
   AxiosInstance,
   AxiosResponse,
   AxiosError,
-  AxiosRequestHeaders,
 } from "axios";
 import axios from "axios";
 import type { AuthResponse } from "@/models/response/AuthResponse";
@@ -73,13 +72,16 @@ const urlsSkipAuth = [
   "/api/auth/logout",
   // "/api/auth/refresh",
 ];
+
 const setTokenHeaders = (config: AxiosRequestConfig) => {
   if (config.url && urlsSkipAuth.includes(config.url)) {
     return config;
   }
+
   const token = getAccessToken();
 
   if (token && config.headers) {
+    config.headers = config.headers as { Authorization: string };
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
