@@ -1,0 +1,25 @@
+// file
+.file-move,
+.file-enter-active,
+.file-leave-active {
+  transition: opacity 0.2s ease;
+}
+.file-leave-active {
+  position: absolute;
+}
+.file-enter-from,
+.file-leave-to {
+  opacity: 0;
+  transform: translateY(-50%)
+}
+// fade
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity .3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
