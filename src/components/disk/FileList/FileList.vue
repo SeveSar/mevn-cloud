@@ -1,33 +1,37 @@
 <template>
-  <div class="filelist" v-if="view === 'list'">
-    <div class="filelist__header">
-      <div class="filelist__name">Name</div>
-      <div class="filelist__date">Date</div>
-      <div class="filelist__size">Size</div>
-    </div>
-    <div class="filelist__list">
-      <transition-group name="file">
-        <FileListItem
-          v-for="file in files"
-          :key="file._id"
-          :file="file"
-          @dblclick="$emit('onDblclickItem', file)"
-          @onClickDownload="onDownloadHandler(file)"
-          @onClickDelete="$emit('onClickDeleteItem', file._id)"
-        ></FileListItem>
-      </transition-group>
-    </div>
-  </div>
-  <div class="filelist-plate" v-else-if="view === 'plate'">
-    <div class="filelist-plate__col" v-for="file in files" :key="file._id">
-      <FileListItem
-        :file="file"
-        :view="view"
-        @dblclick="$emit('onDblclickItem', file)"
-        @onClickDownload="onDownloadHandler(file)"
-        @onClickDelete="$emit('onClickDeleteItem', file._id)"
-      ></FileListItem>
-    </div>
+  <div class="files">
+    <transition name="fade" mode="out-in">
+      <div class="filelist" v-if="view === 'list'">
+        <div class="filelist__header">
+          <div class="filelist__name">Name</div>
+          <div class="filelist__date">Date</div>
+          <div class="filelist__size">Size</div>
+        </div>
+        <div class="filelist__list">
+          <transition-group name="file">
+            <FileListItem
+              v-for="file in files"
+              :key="file._id"
+              :file="file"
+              @dblclick="$emit('onDblclickItem', file)"
+              @onClickDownload="onDownloadHandler(file)"
+              @onClickDelete="$emit('onClickDeleteItem', file._id)"
+            ></FileListItem>
+          </transition-group>
+        </div>
+      </div>
+      <div class="filelist-plate" v-else-if="view === 'plate'">
+        <div class="filelist-plate__col" v-for="file in files" :key="file._id">
+          <FileListItem
+            :file="file"
+            :view="view"
+            @dblclick="$emit('onDblclickItem', file)"
+            @onClickDownload="onDownloadHandler(file)"
+            @onClickDelete="$emit('onClickDeleteItem', file._id)"
+          ></FileListItem>
+        </div>
+      </div>
+    </transition>
   </div>
 </template>
 

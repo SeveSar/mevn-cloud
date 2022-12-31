@@ -1,5 +1,5 @@
 import { ref } from "vue";
-// plugins/i18n.js
+
 import type { ToastMessage } from "./plugins.types";
 export const toast = {
   install: (app: any, options: any) => {

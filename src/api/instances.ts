@@ -11,5 +11,4 @@ const instance: AxiosInstance = axios.create({
 });
 
 initInterceptors(instance);
-
 export default instance;

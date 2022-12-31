@@ -7,6 +7,7 @@
           :avatarSrc="user?.avatar"
           @upload="uploadAvatar"
           class="profile__avatar"
+          :isLoading="isLoading"
         />
         <BaseButton
           class="profile__avatar-delete"
@@ -14,7 +15,7 @@
           :disabled="isLoading"
           v-if="user?.avatar"
         >
-          Удалить
+          Delete
         </BaseButton>
       </div>
     </div>
@@ -25,12 +26,11 @@
 import { defineComponent, inject, ref } from "vue";
 import { storeToRefs } from "pinia";
 import AvatarUpload from "@/components/common/AvatarUpload.vue";
-
 import { useAuthStore } from "@/store/auth";
 import type { ToastMessage } from "@/plugins/plugins.types";
 import { errorHandler } from "@/utils/errorHandler";
 import BaseButton from "@/components/ui/BaseButton.vue";
-
+import { api } from "@/api/api";
 export default defineComponent({
   components: {
     AvatarUpload,
@@ -43,16 +43,21 @@ export default defineComponent({
     const showToast = inject("showToast") as (message: ToastMessage) => {};
     const uploadAvatar = async (file: File) => {
       try {
-        await authStore.uploadAvatar(file);
+        isLoading.value = true;
+        const user = await api.files.uploadAvatar(file);
+        authStore.setUser(user);
       } catch (e) {
         const message = errorHandler(e) || "Error upload avatar";
         showToast({ type: "error", text: message });
+      } finally {
+        isLoading.value = false;
       }
     };
     const deleteAvatar = async () => {
       try {
         isLoading.value = true;
-        await authStore.deleteAvatar();
+        const user = await api.files.deleteAvatar();
+        authStore.setUser(user);
       } catch (e) {
         console.log(e, "e");
         const message = errorHandler(e) || "Error upload avatar";

@@ -21,7 +21,7 @@
       ></BaseInput>
     </div>
     <div class="form__footer">
-      <BaseButton role="submit">SUBMIT</BaseButton>
+      <BaseButton :disabled="isButtonDisabled" role="submit">SUBMIT</BaseButton>
     </div>
   </form>
 </template>
@@ -38,6 +38,10 @@ export default defineComponent({
     title: {
       type: String,
       default: "",
+    },
+    isButtonDisabled: {
+      type: Boolean,
+      default: false,
     },
   },
   components: {

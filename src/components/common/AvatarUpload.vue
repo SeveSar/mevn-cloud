@@ -5,7 +5,9 @@
       id="avatar-file"
       accept="image/*"
       @change="onChangeHanlder"
+      :disabled="isLoading"
     />
+
     <label
       for="avatar-file"
       :style="{ backgroundImage: `url(${currentImage})` }"
@@ -15,7 +17,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, type PropType } from "vue";
+import { defineComponent, computed, type PropType } from "vue";
 import defaultAvatar from "@/assets/images/user.svg";
 
 export default defineComponent({
@@ -24,6 +26,10 @@ export default defineComponent({
       type: null as unknown as PropType<string | null>,
       default: null,
       validator: (v: any) => typeof v === "string" || v === null,
+    },
+    isLoading: {
+      type: Boolean,
+      default: false,
     },
   },
   setup(props, { emit }) {

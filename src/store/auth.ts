@@ -44,13 +44,7 @@ export const useAuthStore = defineStore("auth", () => {
       console.log(e);
     }
   }
-  async function uploadAvatar(file: File) {
-    const user = await api.files.uploadAvatar(file);
-    state.user = user;
-  }
-
-  async function deleteAvatar() {
-    const user = await api.files.deleteAvatar();
+  function setUser(user: IUser) {
     state.user = user;
   }
   async function logOut() {
@@ -63,12 +57,11 @@ export const useAuthStore = defineStore("auth", () => {
   return {
     login,
     signUp,
-    uploadAvatar,
-    deleteAvatar,
     isLoggedIn,
     user,
     logOut,
     auth,
     token,
+    setUser,
   };
 });
