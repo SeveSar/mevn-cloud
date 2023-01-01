@@ -1,18 +1,12 @@
 <template>
   <div class="files-page">
     <UploaderFile ref="fileUploaderRef" />
-    <BaseModal ref="modalRef">
-      <template #body>
-        <form class="form" @submit.prevent="createFolder">
-          <BaseInput
-            placeholder="Name of folder"
-            v-model="inputText"
-          ></BaseInput>
-          <BaseButton role="submit" color="border"> Create </BaseButton>
-        </form>
-      </template>
-    </BaseModal>
     <AppLoader class="disk__loader" v-if="isLoader" />
+    <ModalCreateFolder
+      :currentDir="currentDir"
+      @createFolder="addFolder"
+      ref="createFolderRef"
+    />
     <div class="container">
       <div
         class="disk"
@@ -70,7 +64,6 @@
           </div>
         </div>
         <FileList
-          v-if="pageFiles.length"
           :files="pageFiles"
           :view="viewType"
           @onDblclickItem="openFolder"
@@ -95,7 +88,6 @@ import FileList from "@/components/disk/FileList/FileList.vue";
 import { api } from "@/api/api";
 import DropArea from "@/components/common/DropArea.vue";
 import type { IFile } from "@/models/IFile";
-import BaseModal from "@/components/ui/BaseModal.vue";
 import BaseInput from "@/components/ui/BaseInput.vue";
 import { useRoute, useRouter } from "vue-router";
 import { useDragDrop } from "@/composables/dragDrop";
@@ -109,13 +101,14 @@ import { errorHandler } from "@/utils/errorHandler";
 import AppLoader from "@/components/ui/AppLoader.vue";
 import debounce from "@/utils/debounce";
 import AppIcon from "@/components/ui/AppIcon.vue";
+import ModalCreateFolder from "@/components/modals/ModalCreateFolder.vue";
 
 type SortOptionsKeys = "name" | "date" | "type";
 export default defineComponent({
   components: {
     BaseButton,
     FileList,
-    BaseModal,
+
     DropArea,
     BaseInput,
     FileUpload,
@@ -123,20 +116,22 @@ export default defineComponent({
     AppSelect,
     AppLoader,
     AppIcon,
+    ModalCreateFolder,
   },
 
   setup() {
     //State
     const pageFiles = ref<IFile[]>([]);
-    const modalRef = ref<InstanceType<typeof BaseModal> | null>(null);
-    const inputText = ref("");
+    const createFolderRef = ref<InstanceType<typeof ModalCreateFolder> | null>(
+      null
+    );
     const route = useRoute();
     const router = useRouter();
     const fileUploaderRef = ref<InstanceType<typeof UploaderFile> | null>();
     const dirStack = ref<string[]>([]);
     const inputSearch = ref("");
     const viewType = ref("list");
-    let currentDir: string | null = null;
+    let currentDir = ref<string | null>(null);
     const sortOptions: Record<SortOptionsKeys, SelectItem> = {
       name: { text: "By name", value: "name" },
       date: { text: "By date", value: "date" },
@@ -144,6 +139,7 @@ export default defineComponent({
     };
     const sortSelect = ref<SelectItem>({ text: "Sorting", value: "" });
     const showToast = inject("showToast") as (message: ToastMessage) => {};
+
     // composables
     const { onDragLeaveHandler, onDragEnterHandler, isDragEnter } =
       useDragDrop();
@@ -153,37 +149,25 @@ export default defineComponent({
     function init() {
       const paramsDirId = route.params.dirId as string;
       const querySort = route.query.sort as SortOptionsKeys;
-      currentDir = paramsDirId ? paramsDirId : null;
+      currentDir.value = paramsDirId ? paramsDirId : null;
       sortSelect.value = querySort ? sortOptions[querySort] : sortSelect.value;
     }
     init();
-    const openModal = () => {
-      modalRef.value?.show();
-    };
 
-    const createFolder = async () => {
-      if (!inputText.value) {
-        return false;
-      }
-      try {
-        const res = await api.files.createDir(inputText.value, currentDir);
-        if (!res) {
-          return false;
-        }
-        pageFiles.value.unshift(res);
-        modalRef.value?.close();
-        inputText.value = "";
-      } catch (e) {
-        const message = errorHandler(e) || "Unknown";
-        showToast({ type: "error", text: message });
-      }
+    const openModal = () => {
+      createFolderRef.value?.modalRef?.show();
     };
 
     const fetchFiles = async () => {
+      currentDir.value = route.params.dirId
+        ? (route.params.dirId as string)
+        : null;
       try {
         showLoader();
-        currentDir = route.params.dirId ? (route.params.dirId as string) : null;
-        const res = await api.files.getFiles(currentDir, sortSelect.value);
+        const res = await api.files.getFiles(
+          currentDir.value,
+          sortSelect.value
+        );
         if (!res) return false;
         pageFiles.value = res;
       } catch (e) {
@@ -191,6 +175,10 @@ export default defineComponent({
       } finally {
         hideLoader();
       }
+    };
+
+    const addFolder = async (file: IFile) => {
+      pageFiles.value.unshift(file);
     };
 
     const openFolder = async (file: IFile) => {
@@ -205,7 +193,6 @@ export default defineComponent({
         params: { dirId: file._id },
         query: sortSelect.value.value ? { sort: sortSelect.value.value } : {},
       });
-      currentDir = file._id;
     };
     const backNavigate = () => {
       let backDirId = dirStack.value.pop();
@@ -217,7 +204,7 @@ export default defineComponent({
         fileUploaderRef.value?.open();
         for (let i = 0; i < files.length; i++) {
           const file = files[i];
-          const res = await api.files.uploadFile(currentDir, file);
+          const res = await api.files.uploadFile(currentDir.value, file);
           if (!res) continue;
           pageFiles.value.unshift(res);
         }
@@ -249,13 +236,13 @@ export default defineComponent({
         if (inputSearch.value) {
           const files = await api.files.searchFiles(inputSearch.value);
           pageFiles.value = [...files];
+          hideLoader();
         } else {
           fetchFiles();
         }
       } catch (e) {
-        console.log(e);
-      } finally {
         hideLoader();
+        console.log(e);
       }
     };
     const getAllUsers = () => {
@@ -267,12 +254,12 @@ export default defineComponent({
     watch(inputSearch, debounce(searchFiles));
 
     return {
+      currentDir,
       viewType,
+      createFolderRef,
       pageFiles,
-      inputText,
       openModal,
-      modalRef,
-      createFolder,
+      addFolder,
       openFolder,
       dirStack,
       backNavigate,
@@ -357,16 +344,5 @@ export default defineComponent({
 }
 .container {
   height: 100%;
-}
-.form {
-  display: flex;
-
-  flex-direction: column;
-  .form-group {
-    margin-bottom: 15px;
-  }
-  .button {
-    align-self: flex-end;
-  }
 }
 </style>

@@ -2,7 +2,7 @@
   <div class="files">
     <transition name="fade" mode="out-in">
       <div class="filelist" v-if="view === 'list'">
-        <div class="filelist__header">
+        <div class="filelist__header" v-if="files.length">
           <div class="filelist__name">Name</div>
           <div class="filelist__date">Date</div>
           <div class="filelist__size">Size</div>
@@ -62,7 +62,6 @@ export default defineComponent({
     const onDownloadHandler = (file: IFile) => {
       api.files.downloadFile(file);
     };
-
     return {
       onDownloadHandler,
     };
