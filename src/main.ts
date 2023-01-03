@@ -9,13 +9,6 @@ import "./assets/scss/main.scss";
 import { toast } from "@/plugins/toast";
 import { useAuthStore } from "@/store/auth";
 
-document.onreadystatechange = function () {
-  const initLoader = document.getElementById("init-loader");
-
-  if (initLoader) {
-    initLoader.style.display = "none";
-  }
-};
 const app = createApp(App);
 
 async function init() {
