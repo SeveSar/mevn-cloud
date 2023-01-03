@@ -14,6 +14,10 @@ const app = createApp(App);
 async function init() {
   app.use(createPinia());
   await useAuthStore().auth();
+  const initLoader = document.getElementById("init-loader");
+  if (initLoader) {
+    initLoader.style.display = "none";
+  }
   app.use(router);
   app.use(toast);
   app.mount("#app");
