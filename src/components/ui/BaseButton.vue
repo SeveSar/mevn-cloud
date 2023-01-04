@@ -1,9 +1,9 @@
 <template>
   <button
-    :class="`button ${color}`"
+    :class="['button', color, { loading: isLoading }]"
     :type="role"
     @click="$emit('click')"
-    :disabled="disabled"
+    :disabled="isLoading"
   >
     <slot></slot>
   </button>
@@ -27,7 +27,7 @@ export default defineComponent({
       type: String as PropType<ButtonHTMLAttributes["type"]>,
       default: "button",
     },
-    disabled: {
+    isLoading: {
       type: Boolean,
       default: false,
     },
@@ -44,6 +44,7 @@ export default defineComponent({
   padding: 6px 15px;
   transition: all 0.2s linear;
   max-height: 30px;
+  position: relative;
   &.text {
     background: transparent;
     color: $main-color;
@@ -59,6 +60,37 @@ export default defineComponent({
     &:hover {
       background-color: $main-color;
       color: $white-color;
+    }
+  }
+  &.loading {
+    padding-right: 35px;
+  }
+  &.loading:after {
+    content: "";
+    position: absolute;
+    flex-grow: 1;
+    border-radius: 100%;
+    right: 6px;
+    top: 50%;
+    width: 0px;
+    height: 0px;
+    margin-top: -2px;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    border-left-color: #fff;
+    border-top-color: #fff;
+    animation: spin 0.6s infinite linear, grow 0.3s forwards ease-out;
+  }
+  @keyframes spin {
+    to {
+      transform: rotate(359deg);
+    }
+  }
+  @keyframes grow {
+    to {
+      width: 14px;
+      height: 14px;
+      margin-top: -8px;
+      right: 13px;
     }
   }
 }

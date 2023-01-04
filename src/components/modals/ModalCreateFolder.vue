@@ -3,7 +3,7 @@
     <template #body>
       <form class="form" @submit.prevent="onSubmitForm">
         <BaseInput placeholder="Name of folder" v-model="inputText"></BaseInput>
-        <BaseButton :disabled="isLoading" role="submit" color="border">
+        <BaseButton :isLoading="isLoading" role="submit" color="border">
           Create
         </BaseButton>
       </form>
@@ -12,7 +12,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, inject, watch, type PropType } from "vue";
+import { defineComponent, ref, inject, type PropType } from "vue";
 import BaseModal from "../ui/BaseModal.vue";
 import { api } from "@/api/api";
 import BaseInput from "@/components/ui/BaseInput.vue";

@@ -12,7 +12,7 @@
         <BaseButton
           class="profile__avatar-delete"
           @click="deleteAvatar"
-          :disabled="isLoading"
+          :isLoading="isLoading"
           v-if="user?.avatar"
         >
           Delete

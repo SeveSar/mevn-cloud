@@ -35,10 +35,12 @@ export const useAuthStore = defineStore("auth", () => {
       return false;
     }
     try {
-      const data = await api.auth.checkAuth();
-      state.user = data.user;
-      state.token = data.accessToken;
-      setToken(data.accessToken);
+      const res = await api.auth.refresh();
+      if (res) {
+        state.user = res.data.user;
+        state.token = res.data.accessToken;
+        setToken(res.data.accessToken);
+      }
     } catch (e) {
       cleanTokensData();
       console.log(e);

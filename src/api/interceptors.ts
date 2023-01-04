@@ -8,7 +8,7 @@ import axios from "axios";
 import type { AuthResponse } from "@/models/response/AuthResponse";
 import { useAuthStore } from "@/store/auth";
 import router from "@/router/index";
-
+import { api } from "./api";
 import { getAccessToken, setToken } from "@/utils/tokenHelper";
 enum StatusCode {
   Unauthorized = 401,
@@ -35,10 +35,7 @@ const errorHandler = async (error: AxiosError) => {
         config._isRetry = true;
         try {
           if (refreshTokenRequest === null) {
-            refreshTokenRequest = axios.get<AuthResponse>("/api/auth/refresh", {
-              baseURL: import.meta.env.VITE_BASE_URL,
-              withCredentials: true,
-            });
+            refreshTokenRequest = api.auth.refresh();
           }
           const res = await refreshTokenRequest;
           refreshTokenRequest = null;

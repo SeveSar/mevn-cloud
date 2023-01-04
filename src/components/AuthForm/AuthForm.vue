@@ -21,7 +21,9 @@
       ></BaseInput>
     </div>
     <div class="form__footer">
-      <BaseButton :disabled="isButtonDisabled" role="submit">SUBMIT</BaseButton>
+      <BaseButton :isLoading="isButtonDisabled" role="submit"
+        >SUBMIT</BaseButton
+      >
     </div>
   </form>
 </template>
