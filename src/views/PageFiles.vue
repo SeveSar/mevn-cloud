@@ -35,8 +35,7 @@
                 <div class="disk__sort-wrap">
                   <AppSelect
                     :options="Object.values(sortOptions)"
-                    :sortSelect="sortSelect"
-                    @update:sortSelect="updateSortSelect"
+                    v-model="sortSelect"
                   />
                   <div class="disk__view">
                     <button
@@ -215,12 +214,7 @@ export default defineComponent({
         isDragEnter.value = false;
       }
     };
-    const updateSortSelect = (value: SelectItem) => {
-      if (value.value !== sortSelect.value.value) {
-        sortSelect.value = value;
-        router.push({ query: { sort: sortSelect.value.value } });
-      }
-    };
+
     const removeFile = async (id: string) => {
       try {
         await api.files.removeFile(id);
@@ -252,7 +246,9 @@ export default defineComponent({
     // Watches
     watchEffect(fetchFiles);
     watch(inputSearch, debounce(searchFiles));
-
+    watch(sortSelect, () => {
+      router.push({ query: { sort: sortSelect.value.value } });
+    });
     return {
       currentDir,
       viewType,
@@ -263,7 +259,6 @@ export default defineComponent({
       openFolder,
       dirStack,
       backNavigate,
-      updateSortSelect,
       isDragEnter,
       onDragLeaveHandler,
       onDragEnterHandler,

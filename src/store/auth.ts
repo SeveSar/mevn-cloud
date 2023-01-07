@@ -31,9 +31,6 @@ export const useAuthStore = defineStore("auth", () => {
     return data;
   }
   async function auth() {
-    if (!getAccessToken()) {
-      return false;
-    }
     try {
       const res = await api.auth.refresh();
       if (res) {

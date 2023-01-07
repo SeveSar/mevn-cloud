@@ -29,7 +29,6 @@ export default defineComponent({
     };
     const close = () => {
       isOpen.value = false;
-      console.log("clsoese");
     };
     return {
       isOpen,

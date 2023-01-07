@@ -1,3 +1,4 @@
+import { getAccessToken } from "@/utils/tokenHelper";
 import { createApp } from "vue";
 import { createPinia } from "pinia";
 
@@ -8,12 +9,13 @@ import "@/utils/validations";
 import "./assets/scss/main.scss";
 import { toast } from "@/plugins/toast";
 import { useAuthStore } from "@/store/auth";
-
 const app = createApp(App);
 
 async function init() {
   app.use(createPinia());
-  await useAuthStore().auth();
+  if (getAccessToken()) {
+    await useAuthStore().auth();
+  }
   const initLoader = document.getElementById("init-loader");
   if (initLoader) {
     initLoader.style.display = "none";

@@ -1,17 +1,13 @@
 <template>
   <div class="custom-select" :tabindex="tabindex" @blur="open = false">
     <div class="selected" :class="{ open: open }" @click="open = !open">
-      {{ selected?.text }}
+      {{ modelValue?.text }}
     </div>
     <div class="items" :class="{ hide: !open }">
       <div
         v-for="(option, i) of options"
         :key="i"
-        @click="
-          selected = option;
-          open = false;
-          $emit('update:sortSelect', option);
-        "
+        @click="setSelectValue(option)"
       >
         {{ option.text }}
       </div>
@@ -30,7 +26,7 @@ export default defineComponent({
       type: Array as PropType<Array<SelectItem>>,
       required: true,
     },
-    sortSelect: {
+    modelValue: {
       type: Object as PropType<SelectItem>,
     },
     tabindex: {
@@ -39,14 +35,15 @@ export default defineComponent({
       default: 0,
     },
   },
-  setup(props) {
-    const selected = ref<SelectItem>(
-      props.sortSelect ? props.sortSelect : props.options[0]
-    );
+  setup(_, { emit }) {
     const open = ref(false);
+    const setSelectValue = (option: SelectItem) => {
+      emit("update:modelValue", option);
+      open.value = false;
+    };
     return {
-      selected,
       open,
+      setSelectValue,
     };
   },
 });
