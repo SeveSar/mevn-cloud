@@ -15,7 +15,8 @@
               :file="file"
               @dblclick="$emit('onDblclickItem', file)"
               @onClickDownload="onDownloadHandler(file)"
-              @onClickDelete="$emit('onClickDeleteItem', file._id)"
+              @onClickDelete="removeFile(file._id)"
+              :isButtonBlocked="isButtonBlocked"
             ></FileListItem>
           </transition-group>
         </div>
@@ -27,7 +28,8 @@
             :view="view"
             @dblclick="$emit('onDblclickItem', file)"
             @onClickDownload="onDownloadHandler(file)"
-            @onClickDelete="$emit('onClickDeleteItem', file._id)"
+            :isButtonBlocked="isButtonBlocked"
+            @onClickDelete="removeFile(file._id)"
           ></FileListItem>
         </div>
       </div>
@@ -36,11 +38,14 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, type PropType } from "vue";
+import { defineComponent, inject, ref, type PropType } from "vue";
 import FileListItem from "@/components/disk/FileList/FileListItem.vue";
 import type { IFile } from "@/models/IFile";
+import { useFilesStore } from "@/store/files";
 
 import { api } from "@/api/api";
+import type { ToastMessage } from "@/plugins/plugins.types";
+import { errorHandler } from "@/utils/errorHandler";
 export default defineComponent({
   props: {
     files: {
@@ -59,11 +64,29 @@ export default defineComponent({
     FileListItem,
   },
   setup() {
+    const showToast = inject("showToast") as (message: ToastMessage) => {};
+    const filesStore = useFilesStore();
+    const isButtonBlocked = ref(false);
+
     const onDownloadHandler = (file: IFile) => {
       api.files.downloadFile(file);
     };
+
+    const removeFile = async (id: string) => {
+      isButtonBlocked.value = true;
+      try {
+        await filesStore.removeFile(id);
+      } catch (e) {
+        const message = errorHandler(e) || "Unknown";
+        showToast({ type: "error", text: message });
+      } finally {
+        isButtonBlocked.value = false;
+      }
+    };
     return {
       onDownloadHandler,
+      removeFile,
+      isButtonBlocked,
     };
   },
 });

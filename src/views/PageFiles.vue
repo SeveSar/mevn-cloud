@@ -2,11 +2,7 @@
   <div class="files-page">
     <UploaderFile ref="fileUploaderRef" />
     <AppLoader class="disk__loader" v-if="isLoader" />
-    <ModalCreateFolder
-      :currentDir="currentDir"
-      @createFolder="addFolder"
-      ref="createFolderRef"
-    />
+    <ModalCreateFolder ref="createFolderRef" />
     <div class="container">
       <div
         class="disk"
@@ -63,10 +59,9 @@
           </div>
         </div>
         <FileList
-          :files="pageFiles"
+          :files="files"
           :view="viewType"
           @onDblclickItem="openFolder"
-          @onClickDeleteItem="removeFile"
         />
       </div>
       <DropArea
@@ -89,10 +84,10 @@ import DropArea from "@/components/common/DropArea.vue";
 import type { IFile } from "@/models/IFile";
 import BaseInput from "@/components/ui/BaseInput.vue";
 import { useRoute, useRouter } from "vue-router";
-import { useDragDrop } from "@/composables/dragDrop";
-import { useLoader } from "@/composables/loader";
+import { useDragHandlers } from "@/composables/dragHandlers";
 import FileUpload from "@/components/common/FileUpload.vue";
 import UploaderFile from "@/components/disk/UploaderFile/UploaderFile.vue";
+import { useLoader } from "@/composables/loader";
 import AppSelect from "@/components/ui/AppSelect/AppSelect.vue";
 import type { SelectItem } from "@/components/ui/AppSelect/select.types";
 import type { ToastMessage } from "@/plugins/plugins.types";
@@ -101,13 +96,14 @@ import AppLoader from "@/components/ui/AppLoader.vue";
 import debounce from "@/utils/debounce";
 import AppIcon from "@/components/ui/AppIcon.vue";
 import ModalCreateFolder from "@/components/modals/ModalCreateFolder.vue";
+import { useFilesStore } from "@/store/files";
+import { storeToRefs } from "pinia";
 
 type SortOptionsKeys = "name" | "date" | "type";
 export default defineComponent({
   components: {
     BaseButton,
     FileList,
-
     DropArea,
     BaseInput,
     FileUpload,
@@ -120,17 +116,17 @@ export default defineComponent({
 
   setup() {
     //State
-    const pageFiles = ref<IFile[]>([]);
     const createFolderRef = ref<InstanceType<typeof ModalCreateFolder> | null>(
       null
     );
+    const filesStore = useFilesStore();
+    const { currentDir, files, dirStack } = storeToRefs(filesStore);
     const route = useRoute();
     const router = useRouter();
     const fileUploaderRef = ref<InstanceType<typeof UploaderFile> | null>();
-    const dirStack = ref<string[]>([]);
     const inputSearch = ref("");
     const viewType = ref("list");
-    let currentDir = ref<string | null>(null);
+
     const sortOptions: Record<SortOptionsKeys, SelectItem> = {
       name: { text: "By name", value: "name" },
       date: { text: "By date", value: "date" },
@@ -141,14 +137,12 @@ export default defineComponent({
 
     // composables
     const { onDragLeaveHandler, onDragEnterHandler, isDragEnter } =
-      useDragDrop();
+      useDragHandlers();
     const { showLoader, hideLoader, isLoader } = useLoader();
 
     // Methods
     function init() {
-      const paramsDirId = route.params.dirId as string;
       const querySort = route.query.sort as SortOptionsKeys;
-      currentDir.value = paramsDirId ? paramsDirId : null;
       sortSelect.value = querySort ? sortOptions[querySort] : sortSelect.value;
     }
     init();
@@ -158,26 +152,17 @@ export default defineComponent({
     };
 
     const fetchFiles = async () => {
-      currentDir.value = route.params.dirId
-        ? (route.params.dirId as string)
-        : null;
+      const dirId = (route.params.dirId as string) || null;
+      filesStore.setCurrentDir(dirId);
       try {
         showLoader();
-        const res = await api.files.getFiles(
-          currentDir.value,
-          sortSelect.value
-        );
-        if (!res) return false;
-        pageFiles.value = res;
+        await filesStore.fetchFiles(sortSelect.value.value);
       } catch (e) {
-        console.log(e);
+        const message = errorHandler(e) || "Unknown";
+        showToast({ type: "error", text: message });
       } finally {
         hideLoader();
       }
-    };
-
-    const addFolder = async (file: IFile) => {
-      pageFiles.value.unshift(file);
     };
 
     const openFolder = async (file: IFile) => {
@@ -186,50 +171,39 @@ export default defineComponent({
         return false;
       }
       if (file.parent) {
-        dirStack.value.push(file.parent);
+        filesStore.addToDirStack(file.parent);
       }
       router.push({
         params: { dirId: file._id },
         query: sortSelect.value.value ? { sort: sortSelect.value.value } : {},
       });
     };
-    const backNavigate = () => {
-      let backDirId = dirStack.value.pop();
+
+    const backNavigate = async () => {
+      let backDirId = filesStore.removeLastFromDirStack();
       router.push({ params: { dirId: backDirId } });
     };
 
     const uploadFiles = async (files: File[]) => {
+      showLoader();
       try {
         fileUploaderRef.value?.open();
-        for (let i = 0; i < files.length; i++) {
-          const file = files[i];
-          const res = await api.files.uploadFile(currentDir.value, file);
-          if (!res) continue;
-          pageFiles.value.unshift(res);
-        }
+
+        await filesStore.uploadFiles(files);
       } catch (e) {
         const message = errorHandler(e) || "Unknown";
         showToast({ type: "error", text: message });
       } finally {
         isDragEnter.value = false;
+        hideLoader();
       }
     };
 
-    const removeFile = async (id: string) => {
-      try {
-        await api.files.removeFile(id);
-        pageFiles.value = pageFiles.value.filter((file) => file._id !== id);
-      } catch (e) {
-        const message = errorHandler(e) || "Unknown";
-        showToast({ type: "error", text: message });
-      }
-    };
     const searchFiles = async () => {
       try {
         showLoader();
         if (inputSearch.value) {
-          const files = await api.files.searchFiles(inputSearch.value);
-          pageFiles.value = [...files];
+          await filesStore.searchFiles(inputSearch.value);
           hideLoader();
         } else {
           fetchFiles();
@@ -239,9 +213,6 @@ export default defineComponent({
         console.log(e);
       }
     };
-    const getAllUsers = () => {
-      api.auth.getUsers();
-    };
 
     // Watches
     watchEffect(fetchFiles);
@@ -250,12 +221,12 @@ export default defineComponent({
       router.push({ query: { sort: sortSelect.value.value } });
     });
     return {
+      files,
       currentDir,
       viewType,
       createFolderRef,
-      pageFiles,
       openModal,
-      addFolder,
+      addFolder: filesStore.addFile,
       openFolder,
       dirStack,
       backNavigate,
@@ -265,11 +236,9 @@ export default defineComponent({
       uploadFiles,
       fileUploaderRef,
       sortOptions,
-      getAllUsers,
       sortSelect,
       isLoader,
       inputSearch,
-      removeFile,
     };
   },
 });

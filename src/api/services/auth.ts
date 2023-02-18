@@ -2,14 +2,14 @@ import type { AxiosInstance } from "axios";
 import type { AuthResponse } from "@/models/response/AuthResponse";
 
 class AuthService {
-  private readonly http: AxiosInstance;
+  private readonly $http: AxiosInstance;
   private readonly $axios: AxiosInstance;
   constructor(axiosInstance: AxiosInstance, axios: AxiosInstance) {
-    this.http = axiosInstance;
+    this.$http = axiosInstance;
     this.$axios = axios;
   }
   async register(email: string, password: string) {
-    const res = await this.http.post<AuthResponse>("/api/auth/registration", {
+    const res = await this.$http.post<AuthResponse>("/api/auth/registration", {
       email,
       password,
     });
@@ -17,7 +17,7 @@ class AuthService {
   }
 
   async login(email: string, password: string) {
-    const res = await this.http.post<AuthResponse>("/api/auth/login", {
+    const res = await this.$http.post<AuthResponse>("/api/auth/login", {
       email,
       password,
     });
@@ -32,7 +32,7 @@ class AuthService {
   }
 
   async getUsers() {
-    const res = await this.http.get<any>("/users");
+    const res = await this.$http.get<any>("/users");
     return res.data;
   }
   async logOut() {

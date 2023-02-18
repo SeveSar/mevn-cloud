@@ -17,6 +17,7 @@
     <button
       class="file-btn file__btn file-delete file__delete"
       @click="$emit('onClickDelete')"
+      :disabled="isButtonBlocked"
     >
       <AppIcon name="IconTrash"></AppIcon>
     </button>
@@ -42,6 +43,7 @@
       <button
         class="file-btn file-plate__btn file-delete file-plate__delete"
         @click="$emit('onClickDelete')"
+        :disabled="isButtonBlocked"
       >
         <AppIcon name="IconTrash"></AppIcon>
       </button>
@@ -68,6 +70,10 @@ export default defineComponent({
       validator(value: "list" | "plate") {
         return ["list", "plate"].includes(value);
       },
+    },
+    isButtonBlocked: {
+      type: Boolean,
+      default: false,
     },
   },
   components: {

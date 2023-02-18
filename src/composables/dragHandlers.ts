@@ -1,7 +1,6 @@
 import { ref } from "vue";
-export function useDragDrop() {
+export function useDragHandlers() {
   const isDragEnter = ref(false);
-
   let enterTarget: any = null;
 
   const onDragLeaveHandler = (e: Event) => {

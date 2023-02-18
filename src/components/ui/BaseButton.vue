@@ -12,6 +12,7 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import type { PropType, ButtonHTMLAttributes } from "vue";
+
 export default defineComponent({
   emits: {
     click(): boolean {
